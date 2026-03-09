@@ -24,6 +24,13 @@ They need to accept the invitation (email or github.com/orgs/SELLERINSIDERS/invi
 
 ## Step 3: Grant Repo Access
 
+### Andrei (Owner — VSL Video Framework)
+```bash
+# Andrei already has full access as org owner, but if working on a fresh machine:
+gh api repos/SELLERINSIDERS/VSL-Video-Framework/collaborators/<andrei-username> -X PUT -f permission=admin
+gh api repos/SELLERINSIDERS/shared-company-brain/collaborators/<andrei-username> -X PUT -f permission=admin
+```
+
 ### Xeniya (Co-owner — Shopify, Operations)
 ```bash
 gh api repos/SELLERINSIDERS/evolance-team-setup/collaborators/<xeniya-username> -X PUT -f permission=push
@@ -51,6 +58,14 @@ gh api repos/SELLERINSIDERS/shared-company-brain/collaborators/<olga-username> -
 ## Step 4: Distribute API Keys
 
 Each person needs their own `.env` file. You control which keys each person gets.
+
+### Andrei gets (video production):
+- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] CLICKUP_API_TOKEN (full workspace access)
+- [ ] KLING_API_KEY (AI video generation)
+- [ ] ELEVENLABS_API_KEY (voiceover)
+- [ ] GEMINI_API_KEY (image generation via Nano Banana)
+- [ ] ANTHROPIC_API_KEY (Claude Code — may be set via claude.ai login instead)
 
 ### Xeniya gets:
 - [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)

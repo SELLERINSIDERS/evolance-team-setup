@@ -7,7 +7,7 @@ Step-by-step setup for new Evolance team members to start using Claude Code.
 Before you start, you need:
 1. A Mac or PC with VS Code installed
 2. A GitHub account (create one at github.com if you don't have one)
-3. API keys from Andrei (Supabase + ClickUp tokens)
+3. API keys from Andrei (Supabase + ClickUp tokens, plus any role-specific keys)
 4. Invitation to the SELLERINSIDERS GitHub organization (Andrei will send this)
 
 ## Step 1: Install Claude Code
@@ -66,7 +66,13 @@ source ~/.zshrc
 
 ## Step 6: Clone your project repos
 
-Clone whichever repos you'll be working in. The `--recurse-submodules` flag is important — it pulls the shared knowledge base.
+Clone whichever repos you'll be working in. The `--recurse-submodules` flag is important — it pulls the shared knowledge base automatically.
+
+**Andrei:**
+```bash
+mkdir -p ~/evolance
+git clone --recurse-submodules https://github.com/SELLERINSIDERS/VSL-Video-Framework.git ~/evolance/vsl-video-framework
+```
 
 **Olga:**
 ```bash
@@ -97,34 +103,61 @@ mkdir -p ~/.claude
 cp ~/evolance-team-setup/roles/<your-name>/CLAUDE.md ~/.claude/CLAUDE.md
 ```
 
-Replace `<your-name>` with: `olga`, `vitalii`, or `xeniya`
+Replace `<your-name>` with: `andrei`, `olga`, `vitalii`, or `xeniya`
 
 ## Step 8: Open a project and start working
 
 ```bash
-code ~/evolance/meta-ads    # or whichever project
+code ~/evolance/vsl-video-framework    # Andrei
+code ~/evolance/meta-ads               # Olga
+code ~/evolance/amazon                 # Vitalii
+code ~/evolance/shopify                # Xeniya
 ```
 
 In VS Code, Claude Code will automatically load:
 - Your personal identity from `~/.claude/CLAUDE.md`
-- The project instructions from `CLAUDE.md`
-- Company rules from `.claude/rules/`
-- Project-specific skills from `.claude/skills/`
-- Shared knowledge from `shared/` (products, brand, compliance)
+- The project instructions from `.claude/CLAUDE.md`
+- Project-specific skills from `.claude/commands/`
+- Shared knowledge and skills from `shared/` (products, brand, compliance, video skills)
 - MCP tools (Supabase memory, ClickUp tasks)
 
 ## How to Use Skills
 
 Type `/` in Claude Code to see available skills. Project-specific skills show up automatically.
 
-Example: In the meta-ads project, type `/meta-ad-copy` to use the Meta ad copy skill.
+**Examples:**
+- In the meta-ads project: `/meta-ad-copy` to create Meta ad copy
+- In the VSL Video Framework: `/vsl-production` to start or resume a video production
+- In any project: `/compliance-checker` to check copy against FDA/FTC rules
+
+## VSL Video Framework — Quick Start (Andrei)
+
+Once you've opened `~/evolance/vsl-video-framework` in VS Code, just tell Claude what you want to make:
+
+> "Start a new VSL for NightCap — magnesium glycinate sleep supplement, women 35-55, ancient Egypt angle, 3 min, 9:16"
+
+Claude will automatically trigger `/vsl-production` and walk you through the full pipeline (intake → script → images → video → voiceover → sound design → final edit).
+
+**To resume an interrupted production:**
+> "Resume the NightCap VSL — we stopped at phase 8 image generation"
+
+**Available video skills:**
+- `/vsl-production` — Full pipeline orchestrator (start, resume, or crash recovery)
+- `/cinematic-director` — Scene design and image prompts
+- `/kling-video-workflow` — AI video generation via Kling
+- `/nanobanana` — Image generation at scale
+- `/sound-design` — SFX layer mapping
+- `/video-editor` — EDL generation for Remotion
+- `/remotion-audio` — Final audio mix
 
 ## How to Update Shared Knowledge
 
 When the shared company brain gets updated, pull the latest:
 ```bash
-cd ~/evolance/meta-ads     # or any project
+cd ~/evolance/vsl-video-framework    # or any project
 git submodule update --remote shared
+git add shared && git commit -m "Update shared brain"
+git push
 ```
 
 ## Troubleshooting
@@ -140,7 +173,11 @@ git submodule update --remote shared
 
 **Skills not showing up?**
 - Make sure you opened the project FOLDER in VS Code (File > Open Folder), not a single file
-- Check that `.claude/skills/` exists in the project directory
+- The skills live in `.claude/commands/` — check that folder exists in the project
+
+**`/vsl-production` not triggering automatically?**
+- Just type the command directly: `/vsl-production`
+- Or describe what you want and Claude will pick it up
 
 **Need help?**
 - Ask Andrei or message in the team chat
