@@ -294,6 +294,15 @@ server.tool(
   }
 );
 
+// Word-based filter: any word matches (was: the whole phrase had to match exactly).
+// Only letters/digits reach the PostgREST filter, so commas or parentheses in a query cannot alter it.
+function wordFilter(columns, query) {
+  const words = [...new Set(String(query || "").toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) || [])].slice(0, 8);
+  if (!words.length) return null;
+  return words.flatMap((w) => columns.map((c) => `${c}.ilike.%${w}%`)).join(",");
+}
+const MEMORY_TIP = "\n\nTip: shared memory (all agents incl. Grok, meaning search, replaced facts hidden): memory_recall in the evolance-brain MCP or `memory recall \"<topic>\"`.";
+
 // ============================================================
 // Tool 6: supabase_search_learnings
 // ============================================================
@@ -311,7 +320,8 @@ server.tool(
       let dbQuery = supabase
         .from("learnings")
         .select("id, agent_id, category, topic, summary, detail, impact, created_at")
-        .or(`topic.ilike.%${query}%,summary.ilike.%${query}%`)
+        .or(wordFilter(["topic", "summary"], query) ?? "topic.eq.__none__")
+        .is("superseded_by", null)
         .order("created_at", { ascending: false })
         .limit(limit || 10);
 
@@ -322,7 +332,7 @@ server.tool(
 
       if (!data || data.length === 0) {
         return {
-          content: [{ type: "text", text: `No learnings found matching "${query}".` }],
+          content: [{ type: "text", text: `No learnings found matching "${query}".${MEMORY_TIP}` }],
         };
       }
 
@@ -361,7 +371,7 @@ server.tool(
       let dbQuery = supabase
         .from("agent_events")
         .select("id, agent_id, event_type, title, detail, category, created_at")
-        .or(`title.ilike.%${query}%,detail.ilike.%${query}%`)
+        .or(wordFilter(["title", "detail"], query) ?? "title.eq.__none__")
         .order("created_at", { ascending: false })
         .limit(limit || 20);
 
@@ -372,7 +382,7 @@ server.tool(
 
       if (!data || data.length === 0) {
         return {
-          content: [{ type: "text", text: `No events found matching "${query}".` }],
+          content: [{ type: "text", text: `No events found matching "${query}".${MEMORY_TIP}` }],
         };
       }
 
