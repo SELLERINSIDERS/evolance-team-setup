@@ -114,7 +114,8 @@ When you open a project in VS Code and type `/`, these skills are immediately av
 | Key | Andrei | Xeniya | Vitalii | Olga |
 |-----|--------|--------|---------|------|
 | SUPABASE_URL | ✓ | ✓ | ✓ | ✓ |
-| SUPABASE_SERVICE_KEY | ✓ | ✓ | ✓ | ✓ |
+| Supabase admin key (SUPABASE_SECRET_KEY, brain .env) | ✓ | — | — | — |
+| Shared-memory token (own) | ✓ | ✓ | ✓ | ✓ |
 | CLICKUP_API_TOKEN | ✓ | ✓ | ✓ | ✓ |
 | KLAVIYO_API_KEY | ✓ | ✓ | — | ✓ |
 | Amazon Ads credentials | ✓ | — | ✓ | — |

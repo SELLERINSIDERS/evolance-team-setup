@@ -6,26 +6,64 @@
  * Provides Claude Code with access to the shared agent memory database.
  * Tables: agent_events, decisions, learnings
  * 
- * Env vars required:
- *   SUPABASE_URL - Project URL
- *   SUPABASE_SERVICE_KEY - Service role key (not anon)
+ * Credentials (first match wins; URL and key always come from the same source):
+ *   1. SUPABASE_SECRET_KEY (+ SUPABASE_URL) in the environment
+ *   2. SUPABASE_SECRET_KEY + SUPABASE_URL in the brain .env ($BRAIN_DIR/.env,
+ *      default ~/code/shared-company-brain/.env) - owner machine only
+ *   3. Legacy SUPABASE_SERVICE_KEY (+ SUPABASE_URL) in the environment, then in the brain .env
+ * Key values are never logged. Teammates do not get a Supabase admin key.
  */
 
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 
 // --- Init Supabase ---
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables");
-  process.exit(1);
+function readBrainEnv() {
+  const brainDir = process.env.BRAIN_DIR || join(homedir(), "code", "shared-company-brain");
+  const env = {};
+  try {
+    for (const raw of readFileSync(join(brainDir, ".env"), "utf8").split(/\r?\n/)) {
+      const line = raw.trim().replace(/^export\s+/, "");
+      const eq = line.indexOf("=");
+      if (!line || line.startsWith("#") || eq < 1) continue;
+      env[line.slice(0, eq).trim()] = line.slice(eq + 1).trim().replace(/^(["'])(.*)\1$/, "$2");
+    }
+  } catch {
+    // No brain .env on this machine; environment variables only.
+  }
+  return env;
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+function resolveCredentials() {
+  const brain = readBrainEnv();
+  const sources = [
+    { url: process.env.SUPABASE_URL || brain.SUPABASE_URL, key: process.env.SUPABASE_SECRET_KEY, name: "SUPABASE_SECRET_KEY (environment)" },
+    { url: brain.SUPABASE_URL, key: brain.SUPABASE_SECRET_KEY, name: "SUPABASE_SECRET_KEY (brain .env)" },
+    { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_KEY, name: "legacy SUPABASE_SERVICE_KEY (environment)" },
+    { url: brain.SUPABASE_URL, key: brain.SUPABASE_SERVICE_KEY, name: "legacy SUPABASE_SERVICE_KEY (brain .env)" },
+  ];
+  const found = sources.find((s) => s.key);
+  if (!found || !found.url) {
+    console.error("Missing Supabase credentials: set SUPABASE_URL and SUPABASE_SECRET_KEY (or the legacy SUPABASE_SERVICE_KEY)");
+    process.exit(1);
+  }
+  if (found.name.startsWith("SUPABASE_SECRET_KEY") && !/^sb_secret_[A-Za-z0-9_-]+$/.test(found.key)) {
+    console.error(`Invalid ${found.name} configuration`);
+    process.exit(1);
+  }
+  if (found.name.startsWith("legacy")) {
+    console.error(`Using ${found.name}; legacy keys are being retired, move to SUPABASE_SECRET_KEY`);
+  }
+  return found;
+}
+
+const { url: SUPABASE_URL, key: SUPABASE_KEY } = resolveCredentials();
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- Init MCP Server ---
 const server = new McpServer({

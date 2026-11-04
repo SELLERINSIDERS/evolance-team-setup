@@ -60,7 +60,7 @@ gh api repos/SELLERINSIDERS/shared-company-brain/collaborators/<olga-username> -
 Each person needs their own `.env` file. You control which keys each person gets.
 
 ### Andrei gets (video production):
-- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] Supabase secret key `owner_mac`, in the brain .env only (never copied into project .env files)
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] KLING_API_KEY (AI video generation)
 - [ ] ELEVENLABS_API_KEY (voiceover)
@@ -68,17 +68,17 @@ Each person needs their own `.env` file. You control which keys each person gets
 - [ ] ANTHROPIC_API_KEY (Claude Code — may be set via claude.ai login instead)
 
 ### Xeniya gets:
-- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] Own shared-memory token (no Supabase admin key; the admin key gives full database access)
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] KLAVIYO_API_KEY
 
 ### Vitalii gets:
-- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] Own shared-memory token (no Supabase admin key; the admin key gives full database access)
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] Amazon Ads credentials (if applicable)
 
 ### Olga gets:
-- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] Own shared-memory token (no Supabase admin key; the admin key gives full database access)
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] KLAVIYO_API_KEY
 

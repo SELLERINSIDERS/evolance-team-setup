@@ -19,7 +19,8 @@ MCP server that gives Claude Code access to the shared agent memory database (Su
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `SUPABASE_URL` | ✅ | Supabase project URL |
-| `SUPABASE_SERVICE_KEY` | ✅ | Service role key (not anon key) |
+| `SUPABASE_SECRET_KEY` | ✅ | Secret API key (`sb_secret_…`). Read from the environment, else from the brain .env (`$BRAIN_DIR/.env`, default `~/code/shared-company-brain/.env`) |
+| `SUPABASE_SERVICE_KEY` | legacy | Old service-role key; used only when no secret key is found. Being retired |
 
 ## Database Tables
 
