@@ -10,9 +10,9 @@
  * (shared-company-brain tools/evolance-memory) and never get a Supabase admin key.
  *
  * Credentials (first match wins; URL and key always come from the same source):
- *   1. SUPABASE_SECRET_KEY + SUPABASE_URL in the environment
- *   2. SUPABASE_SECRET_KEY + SUPABASE_URL in the brain .env ($BRAIN_DIR/.env,
+ *   1. SUPABASE_SECRET_KEY + SUPABASE_URL in the brain .env ($BRAIN_DIR/.env,
  *      default ~/code/shared-company-brain/.env)
+ *   2. SUPABASE_SECRET_KEY + SUPABASE_URL in the environment
  *   3. Legacy SUPABASE_SERVICE_KEY + SUPABASE_URL in the environment, then in the brain .env
  * The URL must be the shared memory project (MEMORY_HOST) unless
  * EVOLANCE_MEMORY_ALLOW_OTHER_HOST=1. Key values are never logged.
@@ -52,7 +52,7 @@ function readBrainEnv() {
     fail(`Brain .env unreadable (${err.code || "unknown error"})`);
   }
   const env = {};
-  for (const raw of text.replace(/^﻿/, "").split(/\r?\n/)) {
+  for (const raw of text.replace(/^\uFEFF/, "").split(/\r?\n/)) {
     const line = raw.trim().replace(/^export\s+/, "");
     const eq = line.indexOf("=");
     if (!line || line.startsWith("#") || eq < 1) continue;
@@ -65,8 +65,8 @@ function resolveCredentials() {
   const brain = readBrainEnv();
   const fromEnv = (name) => (process.env[name] || "").trim();
   const sources = [
-    { url: fromEnv("SUPABASE_URL"), key: fromEnv("SUPABASE_SECRET_KEY"), name: "SUPABASE_SECRET_KEY (environment)", legacy: false },
     { url: brain.SUPABASE_URL, key: brain.SUPABASE_SECRET_KEY, name: "SUPABASE_SECRET_KEY (brain .env)", legacy: false },
+    { url: fromEnv("SUPABASE_URL"), key: fromEnv("SUPABASE_SECRET_KEY"), name: "SUPABASE_SECRET_KEY (environment)", legacy: false },
     { url: fromEnv("SUPABASE_URL"), key: fromEnv("SUPABASE_SERVICE_KEY"), name: "legacy SUPABASE_SERVICE_KEY (environment)", legacy: true },
     { url: brain.SUPABASE_URL, key: brain.SUPABASE_SERVICE_KEY, name: "legacy SUPABASE_SERVICE_KEY (brain .env)", legacy: true },
   ];
@@ -86,7 +86,8 @@ function resolveCredentials() {
   if (host !== MEMORY_HOST && process.env.EVOLANCE_MEMORY_ALLOW_OTHER_HOST !== "1") {
     fail(`SUPABASE_URL for ${found.name} is not the shared memory project (${MEMORY_HOST})`);
   }
-  if (!(found.legacy ? LEGACY_KEY_RE : SECRET_KEY_RE).test(found.key)) {
+  const formatOk = SECRET_KEY_RE.test(found.key) || (found.legacy && LEGACY_KEY_RE.test(found.key));
+  if (!formatOk) {
     fail(`Invalid ${found.name} format (check quotes, inline comments and line endings)`);
   }
   if (found.legacy) {

@@ -21,7 +21,7 @@ MCP server that gives Claude Code access to the shared agent memory database (Su
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `SUPABASE_URL` | ✅ | Supabase project URL |
-| `SUPABASE_SECRET_KEY` | ✅ | Secret API key (`sb_secret_…`). Read from the environment, else from the brain .env (`$BRAIN_DIR/.env`, default `~/code/shared-company-brain/.env`) |
+| `SUPABASE_SECRET_KEY` | ✅ | Secret API key (`sb_secret_…`). Read from the brain .env first (`$BRAIN_DIR/.env`, default `~/code/shared-company-brain/.env`), else from the environment |
 | `SUPABASE_SERVICE_KEY` | legacy | Old service-role key; used only when no secret key is found. Being retired |
 
 The URL always comes from the same place as the key, and must be the Evolance Brain project (`pjgifbclxlvvtczctlgp.supabase.co`) unless `EVOLANCE_MEMORY_ALLOW_OTHER_HOST=1`.
