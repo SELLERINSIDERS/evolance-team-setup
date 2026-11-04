@@ -6,26 +6,101 @@
  * Provides Claude Code with access to the shared agent memory database.
  * Tables: agent_events, decisions, learnings
  * 
- * Env vars required:
- *   SUPABASE_URL - Project URL
- *   SUPABASE_SERVICE_KEY - Service role key (not anon)
+ * Owner machine only (Andrei's Mac). Teammates use their own shared-memory token
+ * (shared-company-brain tools/evolance-memory) and never get a Supabase admin key.
+ *
+ * Credentials (first match wins; URL and key always come from the same source):
+ *   1. SUPABASE_SECRET_KEY + SUPABASE_URL in the brain .env ($BRAIN_DIR/.env,
+ *      default ~/code/shared-company-brain/.env)
+ *   2. SUPABASE_SECRET_KEY + SUPABASE_URL in the environment
+ *   3. Legacy SUPABASE_SERVICE_KEY + SUPABASE_URL in the environment, then in the brain .env
+ * The URL must be the shared memory project (MEMORY_HOST) unless
+ * EVOLANCE_MEMORY_ALLOW_OTHER_HOST=1. Key values are never logged.
  */
 
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 
 // --- Init Supabase ---
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const MEMORY_HOST = "pjgifbclxlvvtczctlgp.supabase.co"; // Evolance Brain project
+const SECRET_KEY_RE = /^sb_secret_[A-Za-z0-9_-]+$/;
+const LEGACY_KEY_RE = /^eyJ[\w-]+\.[\w-]+\.[\w-]+$/;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY environment variables");
+function fail(message) {
+  console.error(message);
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+// Shell-style value: quoted values end at the closing quote; unquoted values drop a trailing " # comment".
+function parseEnvValue(raw) {
+  const quoted = raw.match(/^(["'])(.*?)\1/);
+  return quoted ? quoted[2] : raw.replace(/\s+#.*$/, "").trim();
+}
+
+function readBrainEnv() {
+  const brainDir = process.env.BRAIN_DIR || join(homedir(), "code", "shared-company-brain");
+  let text;
+  try {
+    text = readFileSync(join(brainDir, ".env"), "utf8");
+  } catch (err) {
+    if (err.code === "ENOENT") return {}; // No brain .env on this machine.
+    fail(`Brain .env unreadable (${err.code || "unknown error"})`);
+  }
+  const env = {};
+  for (const raw of text.replace(/^\uFEFF/, "").split(/\r?\n/)) {
+    const line = raw.trim().replace(/^export\s+/, "");
+    const eq = line.indexOf("=");
+    if (!line || line.startsWith("#") || eq < 1) continue;
+    env[line.slice(0, eq).trim()] = parseEnvValue(line.slice(eq + 1).trim());
+  }
+  return env;
+}
+
+function resolveCredentials() {
+  const brain = readBrainEnv();
+  const fromEnv = (name) => (process.env[name] || "").trim();
+  const sources = [
+    { url: brain.SUPABASE_URL, key: brain.SUPABASE_SECRET_KEY, name: "SUPABASE_SECRET_KEY (brain .env)", legacy: false },
+    { url: fromEnv("SUPABASE_URL"), key: fromEnv("SUPABASE_SECRET_KEY"), name: "SUPABASE_SECRET_KEY (environment)", legacy: false },
+    { url: fromEnv("SUPABASE_URL"), key: fromEnv("SUPABASE_SERVICE_KEY"), name: "legacy SUPABASE_SERVICE_KEY (environment)", legacy: true },
+    { url: brain.SUPABASE_URL, key: brain.SUPABASE_SERVICE_KEY, name: "legacy SUPABASE_SERVICE_KEY (brain .env)", legacy: true },
+  ];
+  const found = sources.find((s) => s.key);
+  if (!found) {
+    fail("Missing Supabase credentials. This server runs only on Andrei's Mac (SUPABASE_SECRET_KEY in the brain .env); teammates use their shared-memory token.");
+  }
+  if (!found.url) fail(`SUPABASE_URL missing from the same source as ${found.name}`);
+  let host;
+  try {
+    const url = new URL(found.url);
+    if (url.protocol !== "https:") throw new Error("not https");
+    host = url.host;
+  } catch {
+    fail(`Invalid SUPABASE_URL for ${found.name}`);
+  }
+  if (host !== MEMORY_HOST && process.env.EVOLANCE_MEMORY_ALLOW_OTHER_HOST !== "1") {
+    fail(`SUPABASE_URL for ${found.name} is not the shared memory project (${MEMORY_HOST})`);
+  }
+  const formatOk = SECRET_KEY_RE.test(found.key) || (found.legacy && LEGACY_KEY_RE.test(found.key));
+  if (!formatOk) {
+    fail(`Invalid ${found.name} format (check quotes, inline comments and line endings)`);
+  }
+  if (found.legacy) {
+    console.error(`Using ${found.name}; legacy keys are being retired, move to SUPABASE_SECRET_KEY`);
+  }
+  return found;
+}
+
+const { url: SUPABASE_URL, key: SUPABASE_KEY } = resolveCredentials();
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Backstop: never echo the key back through tool output.
+const redact = (message) => String(message).split(SUPABASE_KEY).join("[redacted]");
 
 // --- Init MCP Server ---
 const server = new McpServer({
@@ -78,7 +153,7 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `❌ Failed to log event: ${err.message}`,
+            text: `❌ Failed to log event: ${redact(err.message)}`,
           },
         ],
         isError: true,
@@ -134,7 +209,7 @@ server.tool(
       };
     } catch (err) {
       return {
-        content: [{ type: "text", text: `❌ Query failed: ${err.message}` }],
+        content: [{ type: "text", text: `❌ Query failed: ${redact(err.message)}` }],
         isError: true,
       };
     }
@@ -182,7 +257,7 @@ server.tool(
       };
     } catch (err) {
       return {
-        content: [{ type: "text", text: `❌ Failed to log decision: ${err.message}` }],
+        content: [{ type: "text", text: `❌ Failed to log decision: ${redact(err.message)}` }],
         isError: true,
       };
     }
@@ -236,7 +311,7 @@ server.tool(
       };
     } catch (err) {
       return {
-        content: [{ type: "text", text: `❌ Query failed: ${err.message}` }],
+        content: [{ type: "text", text: `❌ Query failed: ${redact(err.message)}` }],
         isError: true,
       };
     }
@@ -287,7 +362,7 @@ server.tool(
       };
     } catch (err) {
       return {
-        content: [{ type: "text", text: `❌ Failed to log learning: ${err.message}` }],
+        content: [{ type: "text", text: `❌ Failed to log learning: ${redact(err.message)}` }],
         isError: true,
       };
     }
@@ -348,7 +423,7 @@ server.tool(
       };
     } catch (err) {
       return {
-        content: [{ type: "text", text: `❌ Search failed: ${err.message}` }],
+        content: [{ type: "text", text: `❌ Search failed: ${redact(err.message)}` }],
         isError: true,
       };
     }
@@ -398,7 +473,7 @@ server.tool(
       };
     } catch (err) {
       return {
-        content: [{ type: "text", text: `❌ Search failed: ${err.message}` }],
+        content: [{ type: "text", text: `❌ Search failed: ${redact(err.message)}` }],
         isError: true,
       };
     }

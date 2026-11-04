@@ -60,7 +60,7 @@ gh api repos/SELLERINSIDERS/shared-company-brain/collaborators/<olga-username> -
 Each person needs their own `.env` file. You control which keys each person gets.
 
 ### Andrei gets (video production):
-- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] Supabase secret key `owner_mac`, in the brain .env only (never copied into project .env files)
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] KLING_API_KEY (AI video generation)
 - [ ] ELEVENLABS_API_KEY (voiceover)
@@ -68,19 +68,22 @@ Each person needs their own `.env` file. You control which keys each person gets
 - [ ] ANTHROPIC_API_KEY (Claude Code — may be set via claude.ai login instead)
 
 ### Xeniya gets:
-- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] Own shared-memory token (no Supabase admin key; the admin key gives full database access)
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] KLAVIYO_API_KEY
 
 ### Vitalii gets:
-- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] Own shared-memory token (no Supabase admin key; the admin key gives full database access)
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] Amazon Ads credentials (if applicable)
 
 ### Olga gets:
-- [ ] SUPABASE_URL + SUPABASE_SERVICE_KEY (full read/write)
+- [ ] Own shared-memory token (no Supabase admin key; the admin key gives full database access)
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] KLAVIYO_API_KEY
+
+### Remove the retired Supabase admin key
+If `~/evolance-team-setup/.env` or any project `.env` still contains `SUPABASE_SERVICE_KEY`, delete that line. It is a full-access key that is being retired; it stops working once legacy keys are switched off in Supabase.
 
 ### How to share keys securely:
 - Do NOT send keys over Telegram or email in plain text
@@ -94,7 +97,7 @@ Send them: https://github.com/SELLERINSIDERS/evolance-team-setup/blob/main/ONBOA
 
 For each person, confirm:
 - [ ] Can open project in VS Code and see Claude Code working
-- [ ] Can query Supabase: `supabase_search_learnings(query="test")`
+- [ ] Shared memory works with their own token: `memory whoami` (on Andrei's Mac: `supabase_search_learnings(query="test")`)
 - [ ] Can see ClickUp tasks: `clickup_list_tasks()`
 - [ ] Skills show up when typing `/` in Claude Code
 - [ ] Shared brain content accessible at `shared/products/`, `shared/brand/`
