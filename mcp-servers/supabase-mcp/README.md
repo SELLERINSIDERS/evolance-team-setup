@@ -2,6 +2,8 @@
 
 MCP server that gives Claude Code access to the shared agent memory database (Supabase).
 
+**Andrei's Mac only.** It needs the owner's Supabase secret key. Teammates use their own shared-memory token (shared-company-brain `tools/evolance-memory`) instead.
+
 ## Tools Provided
 
 | Tool | Description |
@@ -21,6 +23,8 @@ MCP server that gives Claude Code access to the shared agent memory database (Su
 | `SUPABASE_URL` | ✅ | Supabase project URL |
 | `SUPABASE_SECRET_KEY` | ✅ | Secret API key (`sb_secret_…`). Read from the environment, else from the brain .env (`$BRAIN_DIR/.env`, default `~/code/shared-company-brain/.env`) |
 | `SUPABASE_SERVICE_KEY` | legacy | Old service-role key; used only when no secret key is found. Being retired |
+
+The URL always comes from the same place as the key, and must be the Evolance Brain project (`pjgifbclxlvvtczctlgp.supabase.co`) unless `EVOLANCE_MEMORY_ALLOW_OTHER_HOST=1`.
 
 ## Database Tables
 

@@ -7,7 +7,7 @@ Step-by-step setup for new Evolance team members to start using Claude Code.
 Before you start, you need:
 1. A Mac or PC with VS Code installed
 2. A GitHub account (create one at github.com if you don't have one)
-3. API keys from Andrei (Supabase + ClickUp tokens, plus any role-specific keys)
+3. Your shared-memory token and ClickUp token from Andrei, plus any role-specific keys (no Supabase admin key)
 4. Invitation to the SELLERINSIDERS GitHub organization (Andrei will send this)
 
 ## Step 1: Install Claude Code
@@ -53,7 +53,7 @@ This installs the MCP server dependencies.
 
 ## Step 5: Add your API keys
 
-Edit `~/evolance-team-setup/.env` with the keys Andrei gave you:
+Edit `~/evolance-team-setup/.env` with the keys Andrei gave you. If it still contains `SUPABASE_SERVICE_KEY`, delete that line: it is a retired full-access key.
 ```bash
 nano ~/evolance-team-setup/.env
 ```
@@ -119,7 +119,7 @@ In VS Code, Claude Code will automatically load:
 - The project instructions from `.claude/CLAUDE.md`
 - Project-specific skills from `.claude/commands/`
 - Shared knowledge and skills from `shared/` (products, brand, compliance, video skills)
-- MCP tools (Supabase memory, ClickUp tasks)
+- MCP tools (ClickUp tasks; shared memory through your own token)
 
 ## How to Use Skills
 

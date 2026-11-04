@@ -93,6 +93,8 @@ When you open a project in VS Code and type `/`, these skills are immediately av
 
 ## MCP Tools Available to Everyone
 
+The `supabase_*` tools run only on Andrei's Mac, because they need the owner's Supabase key. Teammates read and write shared memory with their own token through `memory` or the evolance-brain connector (shared-company-brain `tools/evolance-memory`).
+
 | Tool | What it does |
 |------|-------------|
 | `supabase_search_learnings` | Search past learnings across all agents |

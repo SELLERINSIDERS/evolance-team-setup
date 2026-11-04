@@ -82,6 +82,9 @@ Each person needs their own `.env` file. You control which keys each person gets
 - [ ] CLICKUP_API_TOKEN (full workspace access)
 - [ ] KLAVIYO_API_KEY
 
+### Remove the retired Supabase admin key
+If `~/evolance-team-setup/.env` or any project `.env` still contains `SUPABASE_SERVICE_KEY`, delete that line. It is a full-access key that is being retired; it stops working once legacy keys are switched off in Supabase.
+
 ### How to share keys securely:
 - Do NOT send keys over Telegram or email in plain text
 - Use a secure method: 1Password shared vault, Signal disappearing messages, or in-person
@@ -94,7 +97,7 @@ Send them: https://github.com/SELLERINSIDERS/evolance-team-setup/blob/main/ONBOA
 
 For each person, confirm:
 - [ ] Can open project in VS Code and see Claude Code working
-- [ ] Can query Supabase: `supabase_search_learnings(query="test")`
+- [ ] Shared memory works with their own token: `memory whoami` (on Andrei's Mac: `supabase_search_learnings(query="test")`)
 - [ ] Can see ClickUp tasks: `clickup_list_tasks()`
 - [ ] Skills show up when typing `/` in Claude Code
 - [ ] Shared brain content accessible at `shared/products/`, `shared/brand/`
